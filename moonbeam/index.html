@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moonbeam</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- API Key Setup -->
+    <div id="setup-screen" class="auth-screen">
+        <div class="auth-container">
+            <h1>Moonbeam</h1>
+            <p class="setup-desc">Enter your TMDB API key to get started</p>
+            <input type="text" id="setup-api-key" placeholder="TMDB API Key" autocomplete="off">
+            <button id="setup-btn">Continue</button>
+            <p class="setup-help">Get a free key at <a href="https://www.themoviedb.org/settings/api" target="_blank">themoviedb.org</a></p>
+        </div>
+    </div>
+
+    <!-- Main App (hidden until authenticated) -->
+    <div id="app" class="app hidden">
+        <!-- Header -->
+        <header class="header">
+            <h1>Moonbeam</h1>
+            <div class="header-actions">
+                <button id="generate-collage-btn" class="btn-secondary">Generate Collage</button>
+                <button id="browse-folder-btn" class="btn-secondary">Browse Folder</button>
+                <button id="upload-btn" class="btn-primary">+ Add Script</button>
+                <button id="settings-btn" class="btn-icon" title="Settings">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state">
+            <div class="empty-icon">
+                <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+                </svg>
+            </div>
+            <h2>No scripts yet</h2>
+            <p>Upload your first script to get started</p>
+            <button id="empty-upload-btn" class="btn-primary">+ Add Script</button>
+        </div>
+
+        <!-- Poster Collage Grid -->
+        <div id="poster-grid" class="poster-grid hidden"></div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Script</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- File Drop Zone -->
+                <div id="drop-zone" class="drop-zone">
+                    <input type="file" id="file-input" accept=".pdf,.docx" hidden>
+                    <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <p>Drag & drop your script here</p>
+                    <span>or click to browse (PDF, DOCX)</span>
+                </div>
+
+                <!-- File Selected State -->
+                <div id="file-selected" class="file-selected hidden">
+                    <div class="file-info">
+                        <span id="file-name"></span>
+                        <button id="remove-file" class="btn-text">Remove</button>
+                    </div>
+                </div>
+
+                <!-- Metadata Form -->
+                <div id="metadata-form" class="metadata-form hidden">
+                    <div class="form-group">
+                        <label for="title-input">Movie / TV Show Title</label>
+                        <input type="text" id="title-input" placeholder="e.g., Breaking Bad">
+                        <div id="search-results" class="search-results hidden"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="date-input">Date Worked On</label>
+                        <input type="date" id="date-input">
+                    </div>
+                    <div id="selected-show" class="selected-show hidden">
+                        <img id="selected-poster" src="" alt="">
+                        <div class="selected-info">
+                            <h4 id="selected-title"></h4>
+                            <p id="selected-year"></p>
+                        </div>
+                        <button id="change-selection" class="btn-text">Change</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-upload" class="btn-secondary">Cancel</button>
+                <button id="save-script" class="btn-primary" disabled>Save Script</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="detail-title"></h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body detail-body">
+                <div class="detail-sidebar">
+                    <img id="detail-poster" src="" alt="" class="clickable-poster" title="Click to enlarge">
+                    <div class="detail-meta">
+                        <p><strong>Year:</strong> <span id="detail-year"></span></p>
+                        <p><strong>Worked on:</strong> <span id="detail-date"></span></p>
+                    </div>
+                    <p id="detail-overview" class="detail-overview"></p>
+                    <div class="detail-actions">
+                        <button id="edit-script" class="btn-secondary">Edit</button>
+                        <button id="delete-script" class="btn-danger">Delete</button>
+                    </div>
+                </div>
+                <div class="detail-script">
+                    <div id="script-viewer" class="script-viewer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="api-key-input">TMDB API Key</label>
+                    <input type="text" id="api-key-input" placeholder="Enter your TMDB API key">
+                    <small>Get a free key at <a href="https://www.themoviedb.org/settings/api" target="_blank">themoviedb.org</a></small>
+                </div>
+
+                <hr class="settings-divider">
+
+                <div class="settings-section">
+                    <h3>Scripts Folder</h3>
+                    <p class="settings-desc">Connect your local scripts folder. The app reads files directly from here.</p>
+                    <div id="folder-status" class="folder-status">
+                        <span id="folder-path">No folder connected</span>
+                    </div>
+                    <button id="connect-folder-btn" class="btn-secondary">Connect Folder</button>
+                </div>
+
+                <hr class="settings-divider">
+
+                <div class="settings-section">
+                    <h3>Backup & Restore</h3>
+                    <p class="settings-desc">Export your gallery data (dates, posters, etc.) to a JSON file. Import it on another browser.</p>
+                    <div class="settings-actions">
+                        <button id="export-data-btn" class="btn-secondary">Export Data</button>
+                        <button id="import-data-btn" class="btn-secondary">Import Data</button>
+                        <input type="file" id="import-file-input" accept=".json" hidden>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings" class="btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folder Browser Modal -->
+    <div id="browser-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2>Browse Scripts Folder</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="browser-empty" class="browser-empty">
+                    <p>No folder connected. Connect a folder in Settings first.</p>
+                </div>
+                <div id="browser-list" class="browser-list hidden"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="browser-cancel" class="btn-secondary">Cancel</button>
+                <button id="browser-import" class="btn-primary" disabled>Import Selected</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Script</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-title-input">Movie / TV Show Title</label>
+                    <input type="text" id="edit-title-input" placeholder="e.g., Breaking Bad">
+                    <div id="edit-search-results" class="search-results hidden"></div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-date-input">Date Worked On</label>
+                    <input type="date" id="edit-date-input">
+                </div>
+                <div id="edit-selected-show" class="selected-show hidden">
+                    <img id="edit-selected-poster" src="" alt="">
+                    <div class="selected-info">
+                        <h4 id="edit-selected-title"></h4>
+                        <p id="edit-selected-year"></p>
+                    </div>
+                    <button id="edit-change-selection" class="btn-text">Change</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="edit-cancel" class="btn-secondary">Cancel</button>
+                <button id="edit-save" class="btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Poster Zoom Modal -->
+    <div id="poster-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="poster-zoom-container">
+            <button class="poster-zoom-close">&times;</button>
+            <img id="poster-zoom-img" src="" alt="">
+            <button id="poster-download-btn" class="btn-primary poster-download">Download Poster</button>
+        </div>
+    </div>
+
+    <!-- Collage Modal -->
+    <div id="collage-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-xlarge">
+            <div class="modal-header">
+                <h2>Poster Collage</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body collage-body">
+                <div class="collage-options">
+                    <div class="form-group">
+                        <label>Layout</label>
+                        <select id="collage-layout">
+                            <option value="grid">Grid</option>
+                            <option value="timeline">Timeline (Horizontal)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Columns</label>
+                        <select id="collage-columns">
+                            <option value="3">3 Columns</option>
+                            <option value="4" selected>4 Columns</option>
+                            <option value="5">5 Columns</option>
+                            <option value="6">6 Columns</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Show Titles</label>
+                        <select id="collage-titles">
+                            <option value="none">None</option>
+                            <option value="title">Title Only</option>
+                            <option value="both" selected>Title + Date</option>
+                        </select>
+                    </div>
+                    <button id="collage-regenerate" class="btn-secondary">Regenerate</button>
+                </div>
+                <div id="collage-preview" class="collage-preview">
+                    <p style="text-align: center; padding: 2rem;">Generating collage...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="collage-cancel" class="btn-secondary">Close</button>
+                <button id="collage-download" class="btn-primary">Download Collage</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="db.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
